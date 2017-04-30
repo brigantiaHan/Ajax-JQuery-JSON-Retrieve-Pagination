@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Ajax get JSON </title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+	<script
+    src="https://code.jquery.com/jquery-3.1.1.js"
+    integrity="sha256-16cdPddA6VdVInumRGo6IbivbERE8p7CQR3HzTBuELA="
+    crossorigin="anonymous"></script>
+  	<style type="text/css">
+  	   div.pager {
+		    text-align: center;
+		    margin: 20px 0;
+
+		}
+		div.pager span {
+		    display: inline-block;
+		    width: 1.8em;
+		    height: 1.8em;
+		    line-height: 1.8;
+		    text-align: center;
+		    cursor: pointer;
+		    background: #000;
+		    color: #fff;
+		    margin-right: 0.5em;
+		    outline: none;
+		}
+
+		div.pager span.active {
+		    background: #c00;
+		}
+  		.table{
+  			border-collapse: collapse;
+  			margin: 20px auto;
+  			border:2px solid #555;
+  		}
+  		.thead-inverse{
+  			background-color: #333;
+  		}
+  		th{
+  			color: #fff;
+  		}
+  		td{
+  			color: #333;
+  		}
+  	</style>
+</head>
+<body>
+
+<table class="table table-striped">
+	<thead class="thead-inverse" id="dataTableTitle">
+		
+	</thead>
+	<tbody id="dataTableBody">
+		
+	</tbody>
+</table>
+
+
+<script type="text/javascript">
+	var myList;
+	var guid = "LAST-30-DAYS-PLANN-PERMI/";
+    var auth_key = "f42a41af7957860d61ec500270c98ca3a2d2a4d0";
+    $.ajax({
+    	url: "http://api.data.sanjoseca.gov/api/v2/datastreams/"+guid+"data.ajson/?auth_key="+auth_key,
+    	dataType:'json',
+    	async: true,
+    	success: function(response) {
+    		myList = response.result;
+    		convertTotable(myList);
+
+    	}
+    });
+    function convertTotable(myList) {
+    	var headerTr = $('<tr />');
+	    for(var i = 0; i < myList[0].length; i++){
+	    	headerTr.append($('<th />').html(myList[0][i]));
+	    }
+	    $("#dataTableTitle").append(headerTr);
+
+	    for(var j = 1; j <myList.length; j++){
+	    	var row = $('<tr class="content" />');
+	    	for(var col = 0; col < myList[0].length; col++){
+	    		row.append($('<td />').html(myList[j][col]));
+	    		
+	    	}
+	    	$('#dataTableBody').append(row);
+	    }
+	    //seperate Pages to show 
+	    pagination();
+
+    }
+
+
+    function pagination(){
+    	var currentPage = 0;
+    	var once=5;
+       	var times=0;
+       	var $everyPage;
+    		var numPerPage = 5;
+    		var $table = $('#dataTableBody');
+    		$table.bind('repaginate', function(){
+    			$table.find('.content').hide().slice(currentPage * numPerPage,(currentPage + 1) * numPerPage).show();
+    		});
+    		$table.trigger('repaginate');
+
+    		var numRows = $table.find('.content').length;
+      		var numPages = Math.ceil(numRows/numPerPage);
+      		var $page = $('<div class="pager"></div>');
+      		$('<span class="page-go"></span>').text("<").bind('click',function(){
+      			if(times > 0) {
+      				times -= once;
+      				currentPage = times;
+      				$table.trigger('repaginate');
+      				 $page.find('.page-number').hide().slice(times, times + once).show(); 
+      				 $page.find('.page-number').slice(times, times + 1).addClass('active').siblings().removeClass('active');
+      			}
+
+      		}).appendTo($page);
+
+      		 for(var page = 0; page < numPages; page++)
+        	{
+        		if(page === 0) {
+        			//By Default
+        			$everyPage = $('<span class="page-number active"></span>');
+        		} else {
+        			$everyPage = $('<span class="page-number"></span>');
+        		}
+        		
+        		$everyPage.appendTo($page);
+            	$everyPage.text(page + 1).bind('click',
+            	{newPage:(page)},function(event)
+            	{
+                	currentPage=event.data['newPage'];
+                	$table.trigger('repaginate');
+                	$(this).addClass('active').siblings().removeClass('active');
+
+            	});
+
+          
+        	}//for page
+
+
+        	//show items in one page
+        	$page.find('.page-number').hide().slice(currentPage,currentPage+once).show();
+        	$('<span class="page-go"></span>').text(">").bind('click',function(){
+
+        		if((times + once < numPages)){
+        			times += once;
+        			currentPage = times;
+        			$table.trigger('repaginate');
+        			$page.find('.page-number').hide().slice(times, times + once).show();
+        			$page.find('.page-number').slice(times, times + 1).addClass('active').siblings().removeClass('active');
+
+        		}
+        	}).appendTo($page);
+        	$page.insertBefore($('.table'));
+    	
+    }
+    
+</script>
+
+<footer> 
+API: <a href="http://api.data.sanjoseca.gov/api/v2/datastreams/LAST-30-DAYS-PLANN-PERMI/data.ajson/?auth_key=f42a41af7957860d61ec500270c98ca3a2d2a4d0">http://api.data.sanjoseca.gov/api/v2/datastreams/LAST-30-DAYS-PLANN-PERMI/data.ajson/?auth_key=f42a41af7957860d61ec500270c98ca3a2d2a4d0</a>
+</footer>
+</body>
+</html>
